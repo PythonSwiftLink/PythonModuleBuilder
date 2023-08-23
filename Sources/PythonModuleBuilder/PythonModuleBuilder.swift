@@ -192,22 +192,35 @@ public struct _PyModuleBuilder {
     }
     
 }
-
+public final class PySwiftModuleBuilder {
+    
+    init() {
+        let m = PyMethodDef(
+            ml_name: nil,
+            ml_meth: nil,
+            ml_flags: 0,
+            ml_doc: nil
+        )
+    }
+}
 
 public final class PySwiftModule: PyBuildingSyntax {
     public func addToModule(_ m: PyPointer) {
         PyModule_AddObject(m, name, module )
     }
     
-    public let module: PyPointer
+    public var module: PyPointer?
     public let name: String
     //let methods_ptr: PyMethodsPointer
     public var swift_methods: [PyMethodDef] = []
     //var items: [PyMethodDefWrap]
     var pyMethodNamesStorage: [UnsafePointer<CChar>] = []
-    public init(_ name: String, @_PyModuleBuilder input: () -> ([PyBuildingSyntax]) ) {
+    private var input: (() -> [PyBuildingSyntax])
+    public init(_ name: String, @_PyModuleBuilder input: @escaping () -> [PyBuildingSyntax] ) {
         self.name = name
-        
+        self.input = input
+    }
+    public func build() {
         let m = PyImport_AddModule(name)!
         
         var methods: [PyMethodDefWrap] = []
